@@ -1,6 +1,7 @@
 const express = require('express');
 const Curso = require('../models/Curso');
 const Inscripcion = require('../models/Inscripcion');
+const Asignacion = require('../models/Asignacion');
 const Salon = require('../models/Salon');
 
 const router = express.Router();
@@ -94,6 +95,16 @@ router.put('/:id', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
+    const [inscripciones, asignaciones] = await Promise.all([
+      Inscripcion.countDocuments({ curso_id: req.params.id }),
+      Asignacion.countDocuments({ curso_id: req.params.id })
+    ]);
+    if (inscripciones > 0 || asignaciones > 0) {
+      return res.status(409).json({
+        error: 'No se puede eliminar un curso con inscripciones o asignaciones relacionadas'
+      });
+    }
+
     const curso = await Curso.findByIdAndDelete(req.params.id);
     if (!curso) {
       return res.status(404).json({ error: 'Curso no encontrado' });

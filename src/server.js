@@ -17,6 +17,18 @@ const mongoUri = process.env.MONGODB_URI;
 app.use(cors());
 app.use(express.json());
 
+app.use((req, res, next) => {
+  if (!['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    return next();
+  }
+
+  if (!req.is('application/json') || !req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    return res.status(400).json({ error: 'El cuerpo de la solicitud debe ser un objeto JSON' });
+  }
+
+  return next();
+});
+
 app.get('/', (req, res) => {
   res.json({ message: 'API de Cursos de Extensión funcionando' });
 });
@@ -36,11 +48,12 @@ app.use((error, req, res, next) => {
     return next(error);
   }
 
-  if (error.name === 'ValidationError' || error.name === 'CastError' || error.code === 11000) {
-    return res.status(400).json({
-      error: 'Solicitud inválida',
-      detalle: error.message
-    });
+  if (error.code === 11000) {
+    return res.status(409).json({ error: 'El recurso ya existe' });
+  }
+
+  if (error.name === 'ValidationError' || error.name === 'CastError') {
+    return res.status(400).json({ error: 'Solicitud inválida' });
   }
 
   if (error.status === 400 && error.type === 'entity.parse.failed') {
@@ -65,7 +78,11 @@ async function startServer() {
   });
 }
 
-startServer().catch((error) => {
-  console.error('No se pudo iniciar la API:', error.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  startServer().catch((error) => {
+    console.error('No se pudo iniciar la API:', error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = { app };

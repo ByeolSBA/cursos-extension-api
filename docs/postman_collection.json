@@ -1,0 +1,286 @@
+{
+  "info": {
+    "_postman_id": "70e4e31b-913d-4e39-9515-647d53b67e18",
+    "name": "Cursos de Extensión API",
+    "description": "Recorrido de las rutas implementadas. Ejecuta npm run seed para cargar datos de ejemplo antes de probar las consultas relacionadas. La creación y eliminación del curso de demostración usan solo ese curso temporal.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "cursoId",
+      "value": ""
+    },
+    {
+      "key": "cursoConsultaId",
+      "value": ""
+    },
+    {
+      "key": "participanteId",
+      "value": ""
+    },
+    {
+      "key": "inscripcionId",
+      "value": ""
+    },
+    {
+      "key": "salonId",
+      "value": ""
+    },
+    {
+      "key": "asignacionId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Estado de la API",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/"
+      }
+    },
+    {
+      "name": "Cursos",
+      "item": [
+        {
+          "name": "Listar cursos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cursos = pm.response.json();",
+                  "pm.test('Respuesta es una lista (200)', function () { pm.response.to.have.status(200); pm.expect(cursos).to.be.an('array'); });",
+                  "if (cursos.length > 0) pm.collectionVariables.set('cursoConsultaId', cursos[0]._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/cursos"
+          }
+        },
+        {
+          "name": "Crear curso de demostración",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Curso creado (201)', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('cursoId', pm.response.json()._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Curso de demostración {{$guid}}\",\n  \"tipo\": \"Curso\",\n  \"duracion_horas\": 12,\n  \"cupo_maximo\": 20,\n  \"modalidad\": \"Presencial\",\n  \"responsable\": \"Responsable de demostración\"\n}"
+            },
+            "url": "{{baseUrl}}/api/cursos"
+          }
+        },
+        {
+          "name": "Consultar curso de demostración",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/cursos/{{cursoId}}"
+          }
+        },
+        {
+          "name": "Actualizar curso de demostración",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Curso de demostración actualizado\",\n  \"tipo\": \"Curso\",\n  \"duracion_horas\": 16,\n  \"cupo_maximo\": 24,\n  \"modalidad\": \"Presencial\",\n  \"responsable\": \"Responsable de demostración\",\n  \"estado\": \"Activo\"\n}"
+            },
+            "url": "{{baseUrl}}/api/cursos/{{cursoId}}"
+          }
+        },
+        {
+          "name": "Contar inscritos confirmados",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/cursos/{{cursoConsultaId}}/inscritos"
+          }
+        },
+        {
+          "name": "Buscar salones disponibles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/cursos/{{cursoConsultaId}}/salones-disponibles"
+          }
+        },
+        {
+          "name": "Eliminar curso de demostración",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Curso eliminado (200)', function () { pm.response.to.have.status(200); });",
+                  "pm.collectionVariables.unset('cursoId');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/cursos/{{cursoId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Participantes",
+      "item": [
+        {
+          "name": "Listar participantes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const participantes = pm.response.json();",
+                  "pm.test('Respuesta es una lista (200)', function () { pm.response.to.have.status(200); pm.expect(participantes).to.be.an('array'); });",
+                  "if (participantes.length > 0) pm.collectionVariables.set('participanteId', participantes[0]._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/participantes"
+          }
+        },
+        {
+          "name": "Consultar participante",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/participantes/{{participanteId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inscripciones",
+      "item": [
+        {
+          "name": "Listar inscripciones con curso y participante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const inscripciones = pm.response.json();",
+                  "pm.test('Respuesta es una lista (200)', function () { pm.response.to.have.status(200); pm.expect(inscripciones).to.be.an('array'); });",
+                  "if (inscripciones.length > 0) pm.collectionVariables.set('inscripcionId', inscripciones[0]._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/inscripciones"
+          }
+        },
+        {
+          "name": "Consultar inscripción relacionada",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/inscripciones/{{inscripcionId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Salones",
+      "item": [
+        {
+          "name": "Listar salones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const salones = pm.response.json();",
+                  "pm.test('Respuesta es una lista (200)', function () { pm.response.to.have.status(200); pm.expect(salones).to.be.an('array'); });",
+                  "if (salones.length > 0) pm.collectionVariables.set('salonId', salones[0]._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/salones"
+          }
+        },
+        {
+          "name": "Consultar salón",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/salones/{{salonId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Asignaciones",
+      "item": [
+        {
+          "name": "Listar asignaciones con curso y salón",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const asignaciones = pm.response.json();",
+                  "pm.test('Respuesta es una lista (200)', function () { pm.response.to.have.status(200); pm.expect(asignaciones).to.be.an('array'); });",
+                  "if (asignaciones.length > 0) pm.collectionVariables.set('asignacionId', asignaciones[0]._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/asignaciones"
+          }
+        },
+        {
+          "name": "Consultar asignación relacionada",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/asignaciones/{{asignacionId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

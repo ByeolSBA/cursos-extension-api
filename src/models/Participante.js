@@ -11,7 +11,8 @@ const participanteSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      lowercase: true
+      lowercase: true,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'El correo electrónico no es válido']
     },
     tipo_participante: {
       type: String,

@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed": "node src/seed.js"
+    "seed": "node src/seed.js",
+    "test": "node --test test/api.test.js",
+    "test:integration": "node -e \"if (!process.env.MONGODB_TEST_URI) { console.error('Define MONGODB_TEST_URI for localhost to run integration tests.'); process.exit(1); }\" && node --test test/integration.test.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "keywords": [
     "api",

@@ -52,63 +52,81 @@ async function seed() {
   }
 
   await mongoose.connect(process.env.MONGODB_URI);
-  await Promise.all([
-    Asignacion.deleteMany({}),
-    Inscripcion.deleteMany({}),
-    Salon.deleteMany({}),
-    Participante.deleteMany({}),
-    Curso.deleteMany({})
-  ]);
-
-  const cursos = await Curso.insertMany(
-    cursosIniciales.map(([nombre, tipo, duracion_horas, cupo_maximo, modalidad, responsable], index) => ({
-      nombre,
-      tipo,
-      duracion_horas,
-      cupo_maximo,
-      modalidad,
-      responsable,
-      estado: index === 9 ? 'Inactivo' : 'Activo'
-    }))
+  const cursos = await Promise.all(
+    cursosIniciales.map(([nombre, tipo, duracion_horas, cupo_maximo, modalidad, responsable], index) =>
+      Curso.findOneAndUpdate(
+        { nombre },
+        {
+          $set: {
+            tipo,
+            duracion_horas,
+            cupo_maximo,
+            modalidad,
+            responsable,
+            estado: index === 9 ? 'Inactivo' : 'Activo'
+          }
+        },
+        { upsert: true, new: true, runValidators: true }
+      )
+    )
   );
-  const participantes = await Participante.insertMany(
-    participantesIniciales.map(([nombre, email, tipo_participante], index) => ({
-      nombre,
-      email,
-      tipo_participante,
-      estado: index === 9 ? 'Inactivo' : 'Activo'
-    }))
+  const participantes = await Promise.all(
+    participantesIniciales.map(([nombre, email, tipo_participante], index) =>
+      Participante.findOneAndUpdate(
+        { email },
+        {
+          $set: {
+            nombre,
+            tipo_participante,
+            estado: index === 9 ? 'Inactivo' : 'Activo'
+          }
+        },
+        { upsert: true, new: true, runValidators: true }
+      )
+    )
   );
-  const salones = await Salon.insertMany(
-    salonesIniciales.map(([nombre, ubicacion, capacidad, tipo, disponible]) => ({
-      nombre,
-      ubicacion,
-      capacidad,
-      tipo,
-      disponible
-    }))
-  );
-
-  await Inscripcion.insertMany(
-    participantes.map((participante, index) => ({
-      participante_id: participante._id,
-      curso_id: cursos[index],
-      fecha_inscripcion: new Date(Date.UTC(2026, 0, index + 1)),
-      estado: index < 7 ? 'Confirmada' : index === 7 ? 'Pendiente' : 'Cancelada'
-    }))
-  );
-  await Asignacion.insertMany(
-    cursos.map((curso, index) => ({
-      curso_id: curso._id,
-      salon_id: salones[index],
-      fecha_inicio: new Date(Date.UTC(2026, 1, index + 1)),
-      hora_inicio: `${String(9 + (index % 8)).padStart(2, '0')}:00`,
-      duracion_horas: curso.duracion_horas,
-      estado: index === 9 ? 'Pendiente' : 'Asignada'
-    }))
+  const salones = await Promise.all(
+    salonesIniciales.map(([nombre, ubicacion, capacidad, tipo, disponible]) =>
+      Salon.findOneAndUpdate(
+        { nombre },
+        { $set: { ubicacion, capacidad, tipo, disponible } },
+        { upsert: true, new: true, runValidators: true }
+      )
+    )
   );
 
-  console.log('Seed completado: 10 cursos, 10 participantes, 10 inscripciones, 10 salones y 10 asignaciones.');
+  await Promise.all(
+    participantes.map((participante, index) =>
+      Inscripcion.findOneAndUpdate(
+        { participante_id: participante._id, curso_id: cursos[index]._id },
+        {
+          $set: {
+            fecha_inscripcion: new Date(Date.UTC(2026, 0, index + 1)),
+            estado: index < 7 ? 'Confirmada' : index === 7 ? 'Pendiente' : 'Cancelada'
+          }
+        },
+        { upsert: true, new: true, runValidators: true }
+      )
+    )
+  );
+  await Promise.all(
+    cursos.map((curso, index) =>
+      Asignacion.findOneAndUpdate(
+        { curso_id: curso._id, salon_id: salones[index]._id },
+        {
+          $set: {
+            fecha_inicio: new Date(Date.UTC(2026, 1, index + 1)),
+            hora_inicio: `${String(9 + (index % 8)).padStart(2, '0')}:00`,
+            duracion_horas: curso.duracion_horas,
+            estado: index === 9 ? 'Pendiente' : 'Asignada'
+          }
+        },
+        { upsert: true, new: true, runValidators: true }
+      )
+    )
+  );
+
+  console.log('Seed completado: 10 cursos, 10 participantes, 10 inscripciones, 10 salones y 10 asignaciones (creados o actualizados; no borra datos).');
 }
 
 seed()
